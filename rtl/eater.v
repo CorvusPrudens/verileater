@@ -2,9 +2,10 @@
 `define DEFAULT_OUTPUT_HEX "hex/output.hex"
 
 module eater #(
+        parameter RESET_PC        = 0,
         parameter INSTRUCTION_HEX = `DEFAULT_INSTR_HEX,
         parameter OUTPUT_HEX      = `DEFAULT_OUTPUT_HEX,
-        parameter OUTPUT_DIVIDE   = 20
+        parameter OUTPUT_DIVIDE   = 1
     ) 
     (
         input wire clk_i,
@@ -18,23 +19,29 @@ module eater #(
     // Control Signals
     ///////////////////////////////
 
-    wire reset = reset_i;   // CLR
-    wire c_halt;            // HLT
-    wire c_memory_in;       // ~MI
-    wire c_ram_in;          // RI
-    wire c_ram_out;         // ~RO
-    wire c_instruction_out; // ~IO
-    wire c_instruction_in;  // ~II
-    wire c_a_in;            // ~AI
-    wire c_a_out;           // ~AO
-    wire c_sum_out;         // ~EO
-    wire c_subtract;        // SU
-    wire c_b_in;            // ~BI
-    wire c_output_in;       // OI
-    wire c_counter_enable;  // CE
-    wire c_counter_out;     // ~CO
-    wire c_jump;            // ~J
-    wire c_flags_in;        // ~FI
+    reg [1:0] reset_cdc;
+    always @(posedge clk_i) begin
+        reset_cdc[0] <= reset_i;
+        reset_cdc[1] <= reset_cdc[0];
+    end
+
+    wire reset = reset_cdc[1]; // CLR
+    wire c_halt;               // HLT
+    wire c_memory_in;          // ~MI
+    wire c_ram_in;             // RI
+    wire c_ram_out;            // ~RO
+    wire c_instruction_out;    // ~IO
+    wire c_instruction_in;     // ~II
+    wire c_a_in;               // ~AI
+    wire c_a_out;              // ~AO
+    wire c_sum_out;            // ~EO
+    wire c_subtract;           // SU
+    wire c_b_in;               // ~BI
+    wire c_output_in;          // OI
+    wire c_counter_enable;     // CE
+    wire c_counter_out;        // ~CO
+    wire c_jump;               // ~J
+    wire c_flags_in;           // ~FI
 
     wire [7:0] bus;
 
@@ -46,7 +53,7 @@ module eater #(
 
     always @(posedge clk_i) begin
         if (reset)
-            program_counter <= 0;
+            program_counter <= RESET_PC;
         else if (c_jump)
             program_counter <= bus[3:0];
         else if (c_counter_enable)
