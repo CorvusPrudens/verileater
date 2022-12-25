@@ -50,13 +50,13 @@ lut_methods = {
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser('hex LUT generation tool')
+    parser = argparse.ArgumentParser(description='hex LUT generation tool')
     parser.add_argument('LUT', type=str, help='LUT type', choices=['instructions', 'output'])
-    parser.add_argument('-o', type=str, help='Output file')
+    parser.add_argument('-o', type=str, help='output file')
 
     args = parser.parse_args()
 
-    lut = lut_methods[args.LUT]()
+    lut = lut_methods[args.LUT]
 
     if args.o:
         with open(args.o, 'w') as file:
