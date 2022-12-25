@@ -1,5 +1,5 @@
-`define DEFAULT_INSTR_HEX "instructions.hex"
-`define DEFAULT_OUTPUT_HEX "output.hex"
+`define DEFAULT_INSTR_HEX "hex/instructions.hex"
+`define DEFAULT_OUTPUT_HEX "hex/output.hex"
 
 module eater #(
         parameter INSTRUCTION_HEX = `DEFAULT_INSTR_HEX,
