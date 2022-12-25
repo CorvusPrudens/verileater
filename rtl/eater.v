@@ -172,7 +172,7 @@ module eater #(
     reg instruction_ready;
 
     always @(posedge clk_i) begin
-        if (reset) begin
+        if (reset | c_halt) begin
             instruction_ready <= 1'b0;
             micro_instruction <= 0;
         end else if (instruction_ready == 0) begin
