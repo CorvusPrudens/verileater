@@ -125,7 +125,9 @@ def gen_instructions() -> 'list[int]':
             RO | BI,
             EO | AI | SU,
         ]),
-        Instruction(8),
+        Instruction(8, flag=None, mnemonic='OUT', uinstructions=[
+            AO | OI,
+        ]),
         Instruction(9),
         Instruction(10),
         Instruction(11),

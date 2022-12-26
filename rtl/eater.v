@@ -1,10 +1,20 @@
+`ifndef DEFAULT_INSTR_HEX
 `define DEFAULT_INSTR_HEX "hex/instructions.hex"
+`endif
+
+`ifndef DEFAULT_OUTPUT_HEX
 `define DEFAULT_OUTPUT_HEX "hex/output.hex"
+`endif
+
+`ifndef DEFAULT_PROGRAM_HEX
+`define DEFAULT_PROGRAM_HEX "build/program.hex"
+`endif
 
 module eater #(
         parameter RESET_PC        = 0,
         parameter INSTRUCTION_HEX = `DEFAULT_INSTR_HEX,
         parameter OUTPUT_HEX      = `DEFAULT_OUTPUT_HEX,
+        parameter PROGRAM_HEX     = `DEFAULT_PROGRAM_HEX,
         parameter OUTPUT_DIVIDE   = 1
     ) 
     (
@@ -105,6 +115,10 @@ module eater #(
     reg [3:0] ram_address;
 
     reg [7:0] ram_output;
+
+    // verilator lint_off WIDTH
+    initial if (PROGRAM_HEX) $readmemh(PROGRAM_HEX, ram);
+    // verilator lint_on WIDTH
 
     always @(posedge clk_i) begin
         if (c_memory_in)
