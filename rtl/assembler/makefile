@@ -10,13 +10,12 @@ EXAMPLE = examples/eater.asm
 
 .PHONY: all build_java test_java
 
-all: $(BUILD)
-	$(ANTLR4) -o $(BUILD)
+all: $(BUILD) build_python
 
 test: $(BUILD) build_java test_java build_python test_python
 
 build_python: $(BUILD)
-	$(ANTLR4) -Dlanguage=Python3 -o $(BUILD) $(GRAMMAR).g4
+	$(ANTLR4) -Dlanguage=Python3 -visitor -o $(BUILD) $(GRAMMAR).g4
 
 build_java: $(BUILD)/eaterParser.java $(BUILD)/eaterLexer.java
 	$(ANTLR4) -o $(BUILD) $(GRAMMAR).g4
@@ -28,6 +27,7 @@ test_java:
 
 $(BUILD):
 	mkdir -p $@
+	touch $@/__init__.py
 
 clean:
 	rm -rf $(BUILD)

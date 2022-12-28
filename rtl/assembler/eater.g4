@@ -10,19 +10,25 @@ statement   : variable
             ;
 
 let         : 'let' IDENTIFIER ('=' number)?;
-const_var   : 'const' IDENTIFIER '=' number;
+constVar   : 'const' IDENTIFIER '=' number;
 
 variable    : let
-            | const_var
+            | constVar
             ;
 
-number      : BIN # numBin
-            | HEX # numHex
-            | DEC # numDec
+numberBin   : BIN;
+numberHex   : HEX;
+numberDec   : DEC;
+
+number      : numberBin
+            | numberHex
+            | numberDec
             ;
+
+address     : '&' IDENTIFIER;
 
 argument    : number         # argNumber
-            | IDENTIFIER     # argVariable
+            | IDENTIFIER     # argIdentifier
             | '&' IDENTIFIER # argAddress
             ;
 
