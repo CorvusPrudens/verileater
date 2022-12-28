@@ -1,12 +1,9 @@
-
 up:
     out
     adi 1
-    jc down
-    j up
+    jnc up
 
 down:
     out
     sbi 1
-    jz up
-    j down
+    jnz down

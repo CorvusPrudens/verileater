@@ -42,7 +42,7 @@ class MachineCode:
     def total_bits(cls):
         return cls.OPCODE_BITS + cls.UINSTR_BITS + cls.Flag.FLAG_BITS
 
-    def __init__(self, opcode: 'int', uinstructions: 'list[int]|None'=None, flag: 'MachineCode.Flag | None'=None, mnemonic: 'str|None'=None, arg_type: 'list[int]|None'=None, arg_bits: 'list[int]|None'=None):
+    def __init__(self, opcode: 'int', uinstructions: 'list[int]|None'=None, flag: 'MachineCode.Flag | None'=None, invert_flag: 'bool'=False, mnemonic: 'str|None'=None, arg_type: 'list[int]|None'=None, arg_bits: 'list[int]|None'=None):
         if opcode >= 2**MachineCode.OPCODE_BITS:
             raise ValueError(f'Opcode must be less than {2**MachineCode.OPCODE_BITS}')
 
@@ -56,6 +56,7 @@ class MachineCode:
         self.opcode = opcode
         self.uinstructions = uinstructions + [0 for _ in range(2**MachineCode.UINSTR_BITS - len(uinstructions))]
         self.flag = flag
+        self.invert_flag = invert_flag
         self.mnemonic = mnemonic
         if arg_type is not None and arg_type not in [MachineCode.LITERAL, MachineCode.ADDRESS]:
             for t in arg_type:
@@ -83,7 +84,8 @@ class MachineCode:
                 else:
                     # NOP when condition is not met
                     try:
-                        addresses[address] = self.uinstructions[ui-2] if (self.flag.flag & f) > 0 else 0
+                        condition = (self.flag.flag & f) == 0 if self.invert_flag else (self.flag.flag & f) > 0
+                        addresses[address] = self.uinstructions[ui-2] if condition else 0
                     except ValueError:
                         addresses[address] = 0
         return addresses
@@ -127,15 +129,19 @@ machine_code = [
     MachineCode(9, flag=None, mnemonic='LDI', arg_type=[MachineCode.LITERAL], arg_bits=4, uinstructions=[
         Control.IO | Control.AI,
     ]),
-    MachineCode(10),
-    MachineCode(11),
-    MachineCode(12, flag=None, mnemonic='J', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[
+    MachineCode(10, flag=None, mnemonic='J', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[
         Control.IO | Control.J
     ]),
-    MachineCode(13, flag=MachineCode.Flag(0b01), mnemonic='JC', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[
+    MachineCode(11, flag=MachineCode.Flag(0b01), mnemonic='JC', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[
         Control.IO | Control.J
     ]),
-    MachineCode(14, flag=MachineCode.Flag(0b10), mnemonic='JZ', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[
+    MachineCode(12, flag=MachineCode.Flag(0b10), mnemonic='JZ', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[
+        Control.IO | Control.J
+    ]),
+    MachineCode(13, flag=MachineCode.Flag(0b01), invert_flag=True, mnemonic='JNC', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[
+        Control.IO | Control.J
+    ]),
+    MachineCode(14, flag=MachineCode.Flag(0b10), invert_flag=True, mnemonic='JNZ', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[
         Control.IO | Control.J
     ]),
     MachineCode(15, flag=None, mnemonic='HLT', arg_type=None, arg_bits=None, uinstructions=[
