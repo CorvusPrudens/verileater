@@ -9,6 +9,7 @@ reset:
     sta n_minus_1
 
 main_loop:
+    out
     add n_minus_2
     sta n
     lda n_minus_1
@@ -16,5 +17,4 @@ main_loop:
     lda n
     sta n_minus_1
     jc reset
-    out
     j main_loop
