@@ -178,6 +178,7 @@ module eater #(
 
     reg [7:0] instruction_reg;
     reg [2:0] micro_instruction;
+    reg       halt;
 
     wire [3:0] opcode = instruction_reg[7:4];
 
@@ -204,7 +205,7 @@ module eater #(
     reg instruction_ready;
 
     always @(posedge clk_i) begin
-        if (reset | c_halt) begin
+        if (reset | halt) begin
             instruction_ready <= 1'b0;
             micro_instruction <= 0;
         end else if (instruction_ready == 0) begin
@@ -213,6 +214,13 @@ module eater #(
             instruction_ready <= 1'b0;
             micro_instruction <= micro_instruction + 1'b1;
         end
+    end
+
+    always @(posedge clk_i) begin
+        if (reset)
+            halt <= 1'b0;
+        else if (c_halt)
+            halt <= 1'b1;
     end
 
     assign {

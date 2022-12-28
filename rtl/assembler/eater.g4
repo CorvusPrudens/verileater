@@ -4,9 +4,10 @@ grammar eater;
 
 parse       : statement* EOF;
 
-statement   : variable
-            | instruction
-            | label
+statement   : variable NEWLINE
+            | instruction NEWLINE
+            | label NEWLINE
+            | NEWLINE
             ;
 
 let         : 'let' IDENTIFIER ('=' number)?;
@@ -25,15 +26,13 @@ number      : numberBin
             | numberDec
             ;
 
-address     : '&' IDENTIFIER;
+instruction : IDENTIFIER                          # instrNoargs
+            | IDENTIFIER argument (',' argument)* # instrArgs
+            ;
 
 argument    : number         # argNumber
             | IDENTIFIER     # argIdentifier
             | '&' IDENTIFIER # argAddress
-            ;
-
-instruction : MNEMONIC_NOARGS                        # instrNoargs
-            | MNEMONIC_ARGS argument (',' argument)* # instrArgs
             ;
 
 label       : IDENTIFIER ':';
@@ -45,29 +44,11 @@ STRING: '"' (~["\r\n] | '\\"')* '"';
 COMMENT: '//' ~[\r\n]* [\n\r] -> skip;
 COMMENT_BLOCK: '/*' .*? '*/' -> skip;
 
-MNEMONIC_NOARGS
-    : 'NOP' | 'nop'
-    | 'OUT' | 'out'
-    | 'HLT' | 'hlt'
-    ;
-
-MNEMONIC_ARGS
-    : 'LDA' | 'lda'
-    | 'STA' | 'sta'
-    | 'LDB' | 'ldb'
-    | 'ADI' | 'adi'
-    | 'SBI' | 'sbi'
-    | 'ADD' | 'add'
-    | 'SUB' | 'sub'
-    | 'LDI' | 'ldi'
-    | 'J'   | 'j'
-    | 'JC'  | 'jc'
-    | 'JZ'  | 'jz'
-    ;
-
 BIN: '0b' [01][01_]*;
 HEX: '0x' [A-Fa-f0-9][A-Fa-f0-9_]*;
 DEC: '0' | [1-9][0-9_]*;
 
 IDENTIFIER: [A-Za-z_][A-Za-z_0-9]*;
-WHITESPACE: [ \t\n\r] -> skip;
+WHITESPACE: [ \t\r] -> skip;
+
+NEWLINE: '\n';

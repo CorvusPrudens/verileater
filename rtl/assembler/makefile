@@ -2,7 +2,7 @@
 BUILD = build
 GRAMMAR = eater
 
-ANTLR4_ROOT = /usr/local/lib/antlr-4.9.1-complete.jar
+ANTLR4_ROOT = /usr/local/lib/antlr-4.11.1-complete.jar
 ANTLR4 = java -jar $(ANTLR4_ROOT)
 GRUN = java org.antlr.v4.gui.TestRig
 

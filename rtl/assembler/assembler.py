@@ -1,3 +1,4 @@
+from math import ceil
 from antlr4 import FileStream, CommonTokenStream
 
 try:
@@ -108,7 +109,12 @@ class Instruction:
 
     def getSize(self):
         """Return the number of bytes this instruction occupies"""
-        return 1
+        try:
+            machine = machine_dict[self.mnemonic.upper()]
+            arg_bits = machine.arg_bits if machine.arg_bits is not None else 0
+            return ceil((4 + arg_bits) / 8) 
+        except KeyError:
+            raise NameError(f'Unknown mnemonic "{self.mnemonic}"')
     
     def setAddress(self, address: 'int'):
         self.address = address
@@ -164,8 +170,8 @@ class Visitor(eaterVisitor):
         self.variables: 'dict[str: Variable]' = {}
         self.labels: 'dict[str: Label]' = {}
 
-        self.statements_bytes = 0
-        self.variables_bytes = 0
+        self.statements_bytes: 'int' = 0
+        self.variables_bytes: 'int' = 0
 
         input_stream = FileStream(path)
         lexer = eaterLexer(input_stream)
@@ -178,16 +184,16 @@ class Visitor(eaterVisitor):
         self.assignAddresses(ram_size)
         self.program = self.assemble(ram_size)
 
-    def assignVariableAddresses(self, ram_size):
-        address = ram_size
+    def get_program(self):
+        return self.program, self.statements_bytes + self.variables_bytes
+
+    def assignVariableAddresses(self, _):
+        address = self.statements_bytes
         self.variables_bytes = 0
         for _, var in self.variables.items():
             self.variables_bytes += var.getSize()
-            address -= var.getSize()
+            address += var.getSize()
             var.setAddress(address)
-
-        if address < 0:
-            raise IndexError(f'Variables overflow RAM ({ram_size} bytes) with {self.variables_bytes} bytes')
 
     def assignStatementAddresses(self, ram_size):
         address = 0
@@ -201,8 +207,8 @@ class Visitor(eaterVisitor):
             raise IndexError(f'Instructions overflow RAM ({ram_size} bytes) with {address} bytes')
 
     def assignAddresses(self, ram_size):
-        self.assignVariableAddresses(ram_size)
         self.assignStatementAddresses(ram_size)
+        self.assignVariableAddresses(ram_size)
 
         total_size = self.statements_bytes + self.variables_bytes
 
@@ -258,14 +264,14 @@ class Visitor(eaterVisitor):
         return int(str(ctx.DEC()), 10)
     
     def visitInstrNoargs(self, ctx: eaterParser.InstrNoargsContext):
-        instr = Instruction(str(ctx.MNEMONIC_NOARGS()), [])
+        instr = Instruction(str(ctx.IDENTIFIER()), [])
         self.statements.append(instr)
     
     def visitInstrArgs(self, ctx: eaterParser.InstrArgsContext):
         args = self.visitChildren(ctx)
         if type(args) != list:
             args = [args]
-        instr = Instruction(str(ctx.MNEMONIC_ARGS()), args)
+        instr = Instruction(str(ctx.IDENTIFIER()), args)
         self.statements.append(instr)
 
     def visitArgNumber(self, ctx: eaterParser.ArgNumberContext):
@@ -299,7 +305,11 @@ if __name__ == '__main__':
     visitor = Visitor()
     visitor.parse(args.file, 16)
 
-    formatted_program = format_bytes(visitor.program, 1, binary=args.binary, addresses=args.addresses)
+    program, size = visitor.get_program()
+    if args.addresses:
+        program = program[:size]
+
+    formatted_program = format_bytes(program, 1, binary=args.binary, addresses=args.addresses)
 
     if args.o:
         if args.binary or args.addresses:

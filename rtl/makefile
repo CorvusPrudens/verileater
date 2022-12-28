@@ -11,7 +11,7 @@ VERILOG_DEFS =
 all: lint arch next
 
 arch: $(BUILD)
-	yosys -p 'verilog_defaults -add $(VERILOG_INCLUDES) $(VERILOG_DEFS); read_verilog $(TARGET).v; synth_ice40 -dsp -abc9 -top $(TARGET) -json $(BUILD)/$(TARGET).json'
+	yosys -p 'verilog_defaults -add $(VERILOG_INCLUDES) $(VERILOG_DEFS); read_verilog $(TARGET).v; synth_ice40 -abc9 -top $(TARGET) -json $(BUILD)/$(TARGET).json'
 
 TARGET_FREQ = 48
 NEXT_ARCH_FLAGS = --freq $(TARGET_FREQ) --lp8k --package bg121
