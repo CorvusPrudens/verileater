@@ -176,6 +176,13 @@ module eater #(
 
     reg [7:0] instruction_reg;
     reg [2:0] micro_instruction;
+
+    always @(posedge clk_i) begin
+        if (reset)
+            instruction_reg <= 0;
+        else if (c_instruction_in)
+            instruction_reg <= bus;
+    end
         
     wire [8:0]  instruction_address;
     reg  [15:0] instruction_memory [(2**9)-1:0];
