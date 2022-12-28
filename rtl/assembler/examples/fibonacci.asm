@@ -1,15 +1,20 @@
-let zero = 0
-let one = 1
-let previous = 1
+let n_minus_2
+let n_minus_1
+let n
 
 reset:
-    lda one
-    sta previous
-    lda zero
+    ldi 0
+    sta n_minus_2
+    ldi 1
+    sta n_minus_1
 
 main_loop:
-    out
-    add previous
-    sta previous
+    add n_minus_2
+    sta n
+    lda n_minus_1
+    sta n_minus_2
+    lda n
+    sta n_minus_1
     jc reset
+    out
     j main_loop

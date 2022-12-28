@@ -56,9 +56,12 @@ int main(int argc, char** argv)
         tfp->open("trace.vcd");
     #endif
 
+    tb->reset_i = 1;
+    tick(tb, tfp, ++logicStep);
+    tb->reset_i = 0;
     tick(tb, tfp, ++logicStep);
 
-    for (int i = 0; i < 1024; i++)
+    for (int i = 0; i < 65536; i++)
     {
         tick(tb, tfp, ++logicStep);
         display.Process();

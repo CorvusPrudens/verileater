@@ -105,26 +105,28 @@ machine_code = [
     ]),
     MachineCode(4, flag=None, mnemonic='ADI', arg_type=[MachineCode.LITERAL], arg_bits=4, uinstructions=[
         Control.IO | Control.BI,
-        Control.EO | Control.AI,
+        Control.EO | Control.AI | Control.FI,
     ]),
     MachineCode(5, flag=None, mnemonic='SBI', arg_type=[MachineCode.LITERAL], arg_bits=4, uinstructions=[
         Control.IO | Control.BI,
-        Control.EO | Control.AI | Control.SU,
+        Control.EO | Control.AI | Control.SU | Control.FI,
     ]),
     MachineCode(6, flag=None, mnemonic='ADD', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[
         Control.IO | Control.MI,
         Control.RO | Control.BI,
-        Control.EO | Control.AI,
+        Control.EO | Control.AI | Control.FI,
     ]),
     MachineCode(7, flag=None, mnemonic='SUB', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[
         Control.IO | Control.MI,
         Control.RO | Control.BI,
-        Control.EO | Control.AI | Control.SU,
+        Control.EO | Control.AI | Control.SU | Control.FI,
     ]),
     MachineCode(8, flag=None, mnemonic='OUT', arg_type=None, arg_bits=None, uinstructions=[
         Control.AO | Control.OI,
     ]),
-    MachineCode(9),
+    MachineCode(9, flag=None, mnemonic='LDI', arg_type=[MachineCode.LITERAL], arg_bits=4, uinstructions=[
+        Control.IO | Control.AI,
+    ]),
     MachineCode(10),
     MachineCode(11),
     MachineCode(12, flag=None, mnemonic='J', arg_type=[MachineCode.ADDRESS], arg_bits=4, uinstructions=[

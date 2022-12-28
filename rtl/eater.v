@@ -122,7 +122,7 @@ module eater #(
 
     always @(posedge clk_i) begin
         if (c_memory_in)
-            ram_address <= bus[7:4];
+            ram_address <= bus[3:0];
     end
 
     always @(posedge clk_i) begin
@@ -137,9 +137,8 @@ module eater #(
     ///////////////////////////////
 
     reg [7:0] output_reg;
+    reg [3:0] output_com_reg;
     reg [1:0] output_mux;
-
-    assign seven_seg_com_o = 4'b0001 << output_mux;
 
     always @(posedge clk_i) begin
         if (reset)
@@ -156,10 +155,13 @@ module eater #(
     initial if (OUTPUT_HEX) $readmemh(OUTPUT_HEX, output_memory);
     // verilator lint_on WIDTH
 
-    always @(posedge clk_i)
+    always @(posedge clk_i) begin
         output_memory_out <= output_memory[output_address];
+        output_com_reg <= 4'b0001 << output_mux;
+    end
 
-    assign seven_seg_o = output_memory_out;
+    assign seven_seg_o     = output_memory_out;
+    assign seven_seg_com_o = output_com_reg;
 
     reg [OUTPUT_DIVIDE:0] output_divide;
 
@@ -176,6 +178,8 @@ module eater #(
 
     reg [7:0] instruction_reg;
     reg [2:0] micro_instruction;
+
+    wire [3:0] opcode = instruction_reg[7:4];
 
     always @(posedge clk_i) begin
         if (reset)
@@ -195,7 +199,7 @@ module eater #(
     initial if (INSTRUCTION_HEX) $readmemh(INSTRUCTION_HEX, instruction_memory);
     // verilator lint_on WIDTH
 
-    assign instruction_address = {flag_zero, flag_carry, instruction_reg[7:4], micro_instruction};
+    assign instruction_address = {flag_zero, flag_carry, opcode, micro_instruction};
 
     reg instruction_ready;
 

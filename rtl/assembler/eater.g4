@@ -10,7 +10,7 @@ statement   : variable
             ;
 
 let         : 'let' IDENTIFIER ('=' number)?;
-constVar   : 'const' IDENTIFIER '=' number;
+constVar    : 'const' IDENTIFIER '=' number;
 
 variable    : let
             | constVar
@@ -59,6 +59,7 @@ MNEMONIC_ARGS
     | 'SBI' | 'sbi'
     | 'ADD' | 'add'
     | 'SUB' | 'sub'
+    | 'LDI' | 'ldi'
     | 'J'   | 'j'
     | 'JC'  | 'jc'
     | 'JZ'  | 'jz'

@@ -63,11 +63,11 @@ class Argument:
     def getConst(self, variables: 'dict[str: Variable]') -> 'bool':
         """Determine whether this argument has a constant value"""
         const_var = self.identifier in variables and variables[self.identifier].const
-        return self.number or const_var
+        return self.number is not None or const_var
 
     def getValue(self, variables: 'dict[str: Variable]'):
         if self.getConst(variables):
-            if self.number:
+            if self.number is not None:
                 return self.number
             
             if self.identifier in variables and variables[self.identifier].const:
@@ -85,7 +85,7 @@ class Argument:
         if self.identifier in variables:
             return variables[self.identifier].getAddress()
         
-        raise ValueError(f'Argument "{self}" does not an address in RAM')
+        raise ValueError(f'Argument "{self}" does not have an address in RAM')
 
     def __str__(self):
         if self.address and self.identifier:
