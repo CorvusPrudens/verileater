@@ -5,6 +5,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <vector>
+
 struct Vector {
     int x;
     int y;
@@ -18,18 +20,46 @@ struct Rect {
     {
         for (int y = position.y; y < size.y + position.y; y++)
         {
-            if (y >= 0 && y < height)
+            if (y < 0 || y >= height)
+                continue;
+
+            for (int x = position.x; x < size.x + position.x; x++)
             {
-                for (int x = position.x; x < size.x + position.x; x++)
-                {
-                    if (x >= 0 && x < width)
-                    {
-                        uint32_t index = x + y * width;
-                        frame_buffer[index] = color;
-                    }
-                }
+                if (x < 0 || x >= width)
+                    continue;
+
+                uint32_t index = x + y * width;
+                frame_buffer[index] = color;
             }
-            
+        }
+    }
+};
+
+struct Circle {
+    Vector position;
+    int radius;
+
+    void draw(uint32_t* frame_buffer, int width, int height, uint32_t color)
+    {
+        for (int y = -radius; y <= radius; y++)
+        {
+            int draw_y = position.y + y;
+            if (draw_y < 0 || draw_y >= height)
+                continue;
+
+            for (int x = -radius; x <= radius; x++)
+            {
+                int draw_x = position.x + x;
+                
+                if (draw_x < 0 || draw_x >= width)
+                    continue;   
+
+                if (x*x + y*y > radius * radius)
+                    continue;
+
+                uint32_t index = draw_x + draw_y * width;
+                frame_buffer[index] = color;
+            }
         }
     }
 };
@@ -100,11 +130,45 @@ struct EaterSegs {
     }
 };
 
+struct LedRegister {
+    std::vector<Circle> circles;
+    uint32_t state;
+    uint32_t register_bits;
+
+    LedRegister() {}
+    LedRegister(int x, int y, int radius, int bits)
+    {
+        for (int i = 0; i < bits; i++)
+        {
+            Vector position = {x + (radius * 3) * i, y};
+            Circle circle = {position, radius};
+            circles.push_back(circle);
+        }
+        state = 0;
+        register_bits = bits;
+    }
+
+    void draw(uint32_t* frame_buffer, int width, int height, uint32_t on_color, uint32_t off_color)
+    {
+        for (int i = 0; i < register_bits; i++)
+        {
+            uint32_t bit_mask = 1 << (register_bits - 1 - i);
+            uint32_t color = bit_mask & state ? on_color : off_color;
+            circles[i].draw(frame_buffer, width, height, color);
+        }
+    }
+
+    void setRegister(uint32_t value)
+    {
+        state = value;
+    }
+};
+
 template<uint32_t W, uint32_t H, uint32_t S>
 class EaterDisplay {
     public:
 
-        EaterDisplay(uint32_t frequency, uint8_t& segments, uint8_t& com);
+        EaterDisplay(uint32_t frequency, uint8_t& segments, uint8_t& com, uint8_t& counter, uint8_t& flags, uint16_t& control, uint8_t& a, uint8_t& b);
         ~EaterDisplay();
 
         void Process();
@@ -120,13 +184,16 @@ class EaterDisplay {
     uint32_t frame_tick_;
 
     EaterSegs segs_;
-
     uint8_t &segments_, &com_;
+
+    LedRegister counter_leds_, flags_leds_, control_leds_, a_leds_, b_leds_;
+    uint8_t &counter_, &flags_, &a_, &b_;
+    uint16_t &control_;
 };
 
 template<uint32_t W, uint32_t H, uint32_t S>
-EaterDisplay<W, H, S>::EaterDisplay(uint32_t frequency, uint8_t& segments, uint8_t& com)
-: segments_(segments), com_(com)
+EaterDisplay<W, H, S>::EaterDisplay(uint32_t frequency, uint8_t& segments, uint8_t& com, uint8_t& counter, uint8_t& flags, uint16_t& control, uint8_t& a, uint8_t& b)
+: segments_(segments), com_(com), counter_(counter), flags_(flags), control_(control), a_(a), b_(b)
 {
     /////////////////////////////////////
     // OpenGL Initialization
@@ -262,7 +329,15 @@ EaterDisplay<W, H, S>::EaterDisplay(uint32_t frequency, uint8_t& segments, uint8
     uint32_t seg_x = W / 2 - ((seg_w + seg_h * 6) * 4) / 2;
     uint32_t seg_y = H / 2 - (seg_w * 2) / 2;
 
-    segs_ = EaterSegs(seg_x, seg_y, seg_w, seg_h);
+    segs_ = EaterSegs(20, 20, seg_w, seg_h);
+
+    int right_leds = W - (6 * 3 * 8) - 15;
+
+    counter_leds_ = LedRegister(right_leds, 30, 6, 4);
+    flags_leds_ = LedRegister(right_leds, 60, 6, 2);
+    control_leds_ = LedRegister(10, H - 30, 6, 16);
+    a_leds_ = LedRegister(right_leds, 90, 6, 8);
+    b_leds_ = LedRegister(right_leds, 120, 6, 8);
 
     for (size_t i = 0; i < W * H; i++)
         gl_buffer[i] = 0xFF202020;
@@ -284,6 +359,17 @@ void EaterDisplay<W, H, S>::Process()
         frame_tick_ = 0;
         
         segs_.draw(gl_buffer, W, H, 0xFF0000FF, 0xFF000042);
+        counter_leds_.setRegister(counter_);
+        counter_leds_.draw(gl_buffer, W, H, 0xFF00FF00, 0xFF004200);
+        flags_leds_.setRegister(flags_);
+        flags_leds_.draw(gl_buffer, W, H, 0xFFFFFF00, 0xFF424200);
+        control_leds_.setRegister(control_);
+        control_leds_.draw(gl_buffer, W, H, 0xFFFF0000, 0xFF420000);
+
+        a_leds_.setRegister(a_);
+        a_leds_.draw(gl_buffer, W, H, 0xFF00FF00, 0xFF004200);
+        b_leds_.setRegister(b_);
+        b_leds_.draw(gl_buffer, W, H, 0xFF00FF00, 0xFF004200);
 
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, W, H, GL_RGBA, GL_UNSIGNED_BYTE, gl_buffer);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

@@ -192,8 +192,8 @@ class Visitor(eaterVisitor):
         self.variables_bytes = 0
         for _, var in self.variables.items():
             self.variables_bytes += var.getSize()
-            address += var.getSize()
             var.setAddress(address)
+            address += var.getSize()
 
     def assignStatementAddresses(self, ram_size):
         address = 0

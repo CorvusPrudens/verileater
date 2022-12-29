@@ -21,8 +21,13 @@ module eater #(
         input wire clk_i,
         input wire reset_i,
 
-        output wire [7:0] seven_seg_o,
-        output wire [3:0] seven_seg_com_o
+        output wire [7:0]  seven_seg_o,
+        output wire [3:0]  seven_seg_com_o,
+        output wire [3:0]  program_counter_o,
+        output wire [1:0]  flags_o,
+        output wire [15:0] control_o,
+        output wire [7:0]  a_o,
+        output wire [7:0]  b_o
     );
 
     ///////////////////////////////
@@ -67,6 +72,8 @@ module eater #(
 
     reg [3:0] program_counter;
 
+    assign program_counter_o = program_counter;
+
     always @(posedge clk_i) begin
         if (reset)
             program_counter <= RESET_PC;
@@ -82,6 +89,9 @@ module eater #(
 
     reg [7:0] a_reg;
     reg [7:0] b_reg;
+
+    assign a_o = a_reg;
+    assign b_o = b_reg;
 
     // A 9-bit sum register allows us to easily get at the
     // carry-out signal of this adder (sum_reg[8]). It also 
@@ -107,6 +117,8 @@ module eater #(
     reg flag_zero;
     reg flag_carry;
 
+    assign flags_o = {flag_zero, flag_carry};
+
     always @(posedge clk_i) begin
         if (reset) begin
             flag_zero  <= 1'b0;
@@ -130,7 +142,7 @@ module eater #(
 
     reg [7:0] ram_output;
 
-    // Verilator doesn't like coercing a string into a
+    // ! verilator doesn't like coercing a string into a
     // boolean expression, so the width warning is turned off.
     // yosys can have issues with synthesizing ROMs if the
     // module doesn't have a valid path in its file.
@@ -269,6 +281,8 @@ module eater #(
         c_a_in,
         c_a_out
     } = instruction_ready ? instruction_out : 16'b0;
+
+    assign control_o = instruction_out;
 
     ///////////////////////////////
     // Bus Management

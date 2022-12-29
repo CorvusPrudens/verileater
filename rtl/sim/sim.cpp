@@ -7,7 +7,7 @@
 
 #include "eater_display.h"
 
-#define CLOCK_FREQUENCY 1024
+#define CLOCK_FREQUENCY 64
 
 #define CLOCK_SECS (1. / CLOCK_FREQUENCY)
 
@@ -46,7 +46,12 @@ int main(int argc, char** argv)
     EaterDisplay<600, 300, 5> display(
         CLOCK_FREQUENCY,
         tb->seven_seg_o,
-        tb->seven_seg_com_o
+        tb->seven_seg_com_o,
+        tb->program_counter_o,
+        tb->flags_o,
+        tb->control_o,
+        tb->a_o,
+        tb->b_o
     );
 
     uint32_t logicStep = 0;

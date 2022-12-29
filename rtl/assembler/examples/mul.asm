@@ -11,8 +11,7 @@ multiply:
     lda b
     sbi 1
     sta b
-    jz done
-    j multiply
+    jnz multiply
 
 done:
     hlt

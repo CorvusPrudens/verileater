@@ -6,8 +6,7 @@ up:
     lda variable
     adi INCREMENT
     sta variable
-    jc down
-    j up
+    jnc up
 
 down:
     out

@@ -28,6 +28,11 @@ class MachineCode:
     LITERAL = 0
     ADDRESS = 1
 
+    FETCH_CYCLE: 'list[int]' = [
+        Control.CO | Control.MI,
+        Control.RO | Control.II | Control.CE,
+    ]
+
     class Flag:
         FLAG_BITS = 2
         def __init__(self, flag: 'int'):
@@ -49,9 +54,10 @@ class MachineCode:
         if uinstructions is None:
             uinstructions = []
         
-        if len(uinstructions) >= 2**MachineCode.UINSTR_BITS - 2:
+        len_fetch = len(MachineCode.FETCH_CYCLE)
+        if len(uinstructions) >= 2**MachineCode.UINSTR_BITS - len_fetch:
             raise ValueError(
-                f'Too many micro-instructions (expected < {2**MachineCode.UINSTR_BITS - 2}, got {len(uinstructions)})')
+                f'Too many micro-instructions (expected < {2**MachineCode.UINSTR_BITS - len_fetch}, got {len(uinstructions)})')
         
         self.opcode = opcode
         self.uinstructions = uinstructions + [0 for _ in range(2**MachineCode.UINSTR_BITS - len(uinstructions))]
@@ -73,19 +79,20 @@ class MachineCode:
 
             # Every instruction will include the fetch cycle
             fetch_addr = (f << flag_offset) | (self.opcode << op_offset) | 0b000
-            addresses[fetch_addr] = Control.CO | Control.MI
-            fetch_addr += 1
-            addresses[fetch_addr] = Control.RO | Control.II | Control.CE
+            for i, ucode in enumerate(MachineCode.FETCH_CYCLE):
+                addresses[fetch_addr + i] = ucode
 
-            for ui in range(2, 2**MachineCode.UINSTR_BITS):
-                address = (f << flag_offset) | (self.opcode << op_offset) | ui
+            len_fetch = len(MachineCode.FETCH_CYCLE)
+
+            for step in range(2**MachineCode.UINSTR_BITS - len_fetch):
+                address = (f << flag_offset) | (self.opcode << op_offset) | (step + len_fetch)
                 if self.flag is None:
-                    addresses[address] = self.uinstructions[ui-2]
+                    addresses[address] = self.uinstructions[step]
                 else:
                     # NOP when condition is not met
                     try:
                         condition = (self.flag.flag & f) == 0 if self.invert_flag else (self.flag.flag & f) > 0
-                        addresses[address] = self.uinstructions[ui-2] if condition else 0
+                        addresses[address] = self.uinstructions[step] if condition else 0
                     except ValueError:
                         addresses[address] = 0
         return addresses
