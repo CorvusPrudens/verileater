@@ -2,12 +2,12 @@ grammar eater;
 
 // Parsing
 
-parse       : statement* EOF;
+parse       : statement* EOF?;
 
-statement   : variable NEWLINE
-            | instruction NEWLINE
-            | label NEWLINE
-            | NEWLINE
+statement   : variable    (NEWLINE | EOF)
+            | instruction (NEWLINE | EOF)
+            | label       (NEWLINE | EOF)
+            |             NEWLINE
             ;
 
 let         : 'let' IDENTIFIER ('=' number)?;

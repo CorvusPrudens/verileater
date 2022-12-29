@@ -7,7 +7,7 @@
 
 #include "eater_display.h"
 
-#define CLOCK_FREQUENCY 64
+#define CLOCK_FREQUENCY 8
 
 #define CLOCK_SECS (1. / CLOCK_FREQUENCY)
 
